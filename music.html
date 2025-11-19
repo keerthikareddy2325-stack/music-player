@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Music Player</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #121212;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .player {
+      width: 360px;
+      background: #1f1f1f;
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 0 20px black;
+    }
+    .details {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    .progress-container {
+      width: 100%;
+      height: 8px;
+      background: #333;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 10px 0;
+    }
+    .progress {
+      width: 0%;
+      height: 100%;
+      background: #1db954;
+      border-radius: 5px;
+    }
+    .controls {
+      display: flex;
+      justify-content: space-around;
+      margin: 15px 0;
+    }
+    button {
+      background: #1db954;
+      border: none;
+      padding: 8px 15px;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .playlist {
+      margin-top: 20px;
+      max-height: 150px;
+      overflow-y: auto;
+      background: #2c2c2c;
+      padding: 10px;
+      border-radius: 10px;
+    }
+    .song {
+      padding: 8px;
+      cursor: pointer;
+    }
+    .song:hover {
+      background: #3a3a3a;
+    }
+  </style>
+</head>
+
+<body>
+<div class="player">
+
+  <div class="details">
+    <h3 id="title">Song Title</h3>
+    <p id="artist">Artist</p>
+    <p id="duration">00:00 / 00:00</p>
+  </div>
+
+  <div class="progress-container" id="progress-container">
+    <div class="progress" id="progress"></div>
+  </div>
+
+  <div class="controls">
+    <button id="prev">Prev</button>
+    <button id="play">Play</button>
+    <button id="next">Next</button>
+  </div>
+
+  <label>Volume:</label>
+  <input type="range" id="volume" min="0" max="1" step="0.01">
+
+  <div class="playlist" id="playlist"></div>
+
+</div>
+
+<script>
+const songs = [
+  {
+    title: "Telugu Melody 1",
+    artist: "Free Artist",
+    src: "https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Podington_Bear/Dance/Podington_Bear_-_Starling.mp3"
+  },
+  {
+    title: "Telugu Beats 2",
+    artist: "Free Artist",
+    src: "https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Komiku/The_Adventure_Of_The_World/Komiku_-_02_-_Friends.mp3"
+  },
+  {
+    title: "Telugu Soft Tune 3",
+    artist: "Free Artist",
+    src: "https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Komiku/Its_Time_for_Adventure/Komiku_-_04_-_Battle_of_Pogs.mp3"
+  }
+];
+
+let index = 0;
+const audio = new Audio();
+
+const titleEl = document.getElementById("title");
+const artistEl = document.getElementById("artist");
+const durationEl = document.getElementById("duration");
+const progress = document.getElementById("progress");
+const progressContainer = document.getElementById("progress-container");
+const playlistEl = document.getElementById("playlist");
+
+function loadSong(i) {
+  audio.src = songs[i].src;
+  titleEl.textContent = songs[i].title;
+  artistEl.textContent = songs[i].artist;
+}
+function playSong() {
+  audio.play();
+  document.getElementById("play").textContent = "Pause";
+}
+function pauseSong() {
+  audio.pause();
+  document.getElementById("play").textContent = "Play";
+}
+document.getElementById("play").onclick = () => {
+  audio.paused ? playSong() : pauseSong();
+};
+document.getElementById("next").onclick = () => {
+  index = (index + 1) % songs.length;
+  loadSong(index); playSong();
+};
+document.getElementById("prev").onclick = () => {
+  index = (index - 1 + songs.length) % songs.length;
+  loadSong(index); playSong();
+};
+audio.ontimeupdate = () => {
+  const percent = (audio.currentTime / audio.duration) * 100;
+  progress.style.width = percent + "%";
+  durationEl.textContent = format(audio.currentTime) + " / " + format(audio.duration);
+};
+progressContainer.onclick = (e) => {
+  const width = progressContainer.clientWidth;
+  const clickX = e.offsetX;
+  audio.currentTime = (clickX / width) * audio.duration;
+};
+
+document.getElementById("volume").oninput = (e) => audio.volume = e.target.value;
+
+function format(sec) {
+  if (isNaN(sec)) return "00:00";
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${m}:${s < 10 ? "0" : ""}${s}`;
+}
+
+function loadPlaylist() {
+  songs.forEach((song, i) => {
+    const div = document.createElement("div");
+    div.className = "song";
+    div.textContent = song.title + " - " + song.artist;
+    div.onclick = () => {
+      index = i;
+      loadSong(index); playSong();
+    };
+    playlistEl.appendChild(div);
+  });
+}
+
+audio.onended = () => {
+  index = (index + 1) % songs.length;
+  loadSong(index);
+  playSong();
+};
+
+loadSong(index);
+loadPlaylist();
+</script>
+
+</body>
+</html>
